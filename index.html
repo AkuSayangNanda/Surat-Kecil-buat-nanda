@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Surat kecil Untukmu 💜</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg1:#071028;--bg2:#0b1220;--card:rgba(255,255,255,0.04);--accent1:#7b4bff;--accent2:#b088ff;--muted:#bfc9da}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Poppins',system-ui,Arial;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(1200px 600px at 10% 20%, rgba(123,75,255,0.06), transparent), linear-gradient(180deg,var(--bg1),var(--bg2));color:#fff}
+  .card{width:100%;max-width:700px;border-radius:18px;padding:26px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));box-shadow:0 10px 40px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+  .head{display:flex;align-items:center;gap:16px}
+  .logo{font-size:46px}
+  h1{margin:0;color:var(--accent1);font-size:20px}
+  p.lead{margin:0;color:var(--muted)}
+  .row{display:flex;gap:12px;margin-top:16px}
+  input[type=password]{flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.03);color:inherit;font-size:16px}
+  button.cta{padding:12px 16px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent1),var(--accent2));color:#0e0a16;font-weight:700;cursor:pointer}
+  .hint{margin-top:10px;color:var(--muted);font-size:13px}
+  .error{margin-top:10px;color:#ff9bbd;font-size:14px;height:18px}
+
+  /* letter area */
+  .letter{display:none;margin-top:18px;padding:20px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.03);min-height:180px}
+  .letter .title{font-weight:600;color:var(--accent2);text-align:center;margin-bottom:12px}
+  .typing{white-space:pre-wrap;line-height:1.7;font-size:16px;color:#f6f7fb}
+
+  /* cat box */
+  .catWrap{display:flex;align-items:center;gap:12px;margin-top:14px}
+  .cat{width:84px;height:84px;border-radius:20px;background:linear-gradient(180deg,#fff2,#fff1);display:flex;align-items:center;justify-content:center;font-size:44px;transform:translateY(0);animation:float 3s ease-in-out infinite}
+  .cat .paw{display:block;margin-top:6px;font-size:22px;animation:wave 1.6s ease-in-out infinite}
+  @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+  @keyframes wave{0%{transform:rotate(0deg)}50%{transform:rotate(-8deg)}100%{transform:rotate(0deg)}}
+
+  .actions{display:flex;gap:8px;justify-content:center;margin-top:14px}
+  .small{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+
+  /* confetti canvas */
+  canvas.confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:40}
+
+  @media(max-width:560px){.row{flex-direction:column}button.cta{width:100%}}
+</style>
+</head>
+<body>
+<canvas class="confetti" id="confettiCanvas"></canvas>
+<div class="card" id="mainCard">
+  <div class="head">
+    <div class="logo">🐱✨</div>
+    <div>
+      <h1>Halo sayang 💜</h1>
+      <p class="lead">Masukkan kode kecil yang cuma kita berdua tahu. Setelah itu ada surat kecil dariku khusus buat kamu.</p>
+    </div>
+  </div>
+
+  <div class="row" id="formRow">
+    <input id="passInput" type="password" placeholder="Masukkan kode..." aria-label="kode" />
+    <button class="cta" id="openBtn">Buka Surat</button>
+  </div>
+  <div class="hint">Tip: kode ini rahasia kita ya ❤️</div>
+  <div class="error" id="errorMsg"></div>
+
+  <div class="catWrap">
+    <div class="cat" id="catEmoji">🐾<div class="paw">🐱</div></div>
+    <div style="flex:1">
+      <div class="small">Kamu kan suka kucing, jadi aku tambahin teman manis supaya halaman ini nggak sepi hehehehe 💜</div>
+    </div>
+  </div>
+
+  <div class="letter" id="letterBox">
+    <div class="title">💌 Untuk Sayangku…</div>
+    <div id="letterText" class="typing"></div>
+    <div class="actions"><button class="cta" id="loveBtn">Aku sayang kamu 💜</button></div>
+    <div class="small">Kamu bisa buka halaman ini kapan pun kalau butuh semangat.</div>
+  </div>
+</div>
+
+<script>
+  // --- configurable secret ---
+  const correctPass = '091125';
+
+  const passInput = document.getElementById('passInput');
+  const openBtn = document.getElementById('openBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const letterBox = document.getElementById('letterBox');
+  const letterText = document.getElementById('letterText');
+  const loveBtn = document.getElementById('loveBtn');
+  const confettiCanvas = document.getElementById('confettiCanvas');
+
+  // letter content (clean version)
+  const letterContent = `Halo sayangku cintakuu manisku duniakuuu …
+
+Kalau kamu lagi baca ini, berarti kamu udah sampai di tempat kecil yang aku buat khusus cuma buat kamu.
+
+Aku cuma pengen bilang…
+Aku sayang banget sama kamu.
+Dan setiap hari, ada aja alasan baru yang bikin aku bersyukur kamu ada di hidup aku.
+
+Semoga surat kecil ini bisa jadi alasan kamu senyum lagi hari ini.
+Semoga bisa jadi tempat kamu istirahat sebentar dari dunia yang kadang melelahkan.
+
+Kamu itu hebat loh…
+Kamu itu berharga…
+Dan kamu itu pantas dapat segala hal baik.
+
+Aku bakal selalu ada buat kamu,
+buat dukung kamu,
+buat nyemangatin kamu,
+atau cuma buat nemenin kamu lewat hari.
+
+Terima kasih ya sayang…
+buat semuanya,
+buat hadirnya kamu,
+buat perasaan hangat yang kamu kasih.
+
+Aku sayang kamu  hari ini, besok, dan seterusnya. 💜
+
+seseorang yang bahagia banget karena kamu ada`;
+
+  // typing effect
+  function typeText(element, text, speed=28, cb){
+    element.textContent = '';
+    let i = 0;
+    const t = setInterval(()=>{
+      element.textContent += text.charAt(i);
+      i++;
+      if(i >= text.length){ clearInterval(t); if(cb) cb(); }
+    }, speed);
+  }
+
+  // simple confetti implementation
+  function launchConfetti() {
+    const ctx = confettiCanvas.getContext('2d');
+    const DPR = window.devicePixelRatio || 1;
+    confettiCanvas.width = window.innerWidth * DPR;
+    confettiCanvas.height = window.innerHeight * DPR;
+    ctx.scale(DPR, DPR);
+
+    const particles = [];
+    const colors = ['#ff9bbd','#ffd66b','#7b4bff','#7ee7c6','#ff7aa2'];
+    for(let i=0;i<80;i++){
+      particles.push({
+        x: Math.random()*window.innerWidth,
+        y: -20 - Math.random()*200,
+        r: 6+(Math.random()*8),
+        dx: -2 + Math.random()*4,
+        dy: 2 + Math.random()*6,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        rot: Math.random()*360,
+        drot: -6 + Math.random()*12
+      });
+    }
+    let frame = 0;
+    function draw(){
+      ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+      for(const p of particles){
+        p.x += p.dx; p.y += p.dy; p.rot += p.drot*0.1; p.dy += 0.08;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r);
+        ctx.restore();
+      }
+      frame++;
+      if(frame < 260) requestAnimationFrame(draw);
+      else ctx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+    }
+    draw();
+  }
+
+  // little audio using WebAudio (a soft meow-ish chirp)
+  function playMeow(){
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = 660;
+      g.gain.value = 0.02;
+      o.connect(g); g.connect(ctx.destination);
+      o.start();
+      o.frequency.exponentialRampToValueAtTime(520, ctx.currentTime + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
+      o.stop(ctx.currentTime + 0.5);
+    }catch(e){ /* ignore */ }
+  }
+
+  function revealLetter(){
+    document.getElementById('formRow').style.display = 'none';
+    document.getElementById('errorMsg').textContent = '';
+    letterBox.style.display = 'block';
+    typeText(letterText, letterContent, 22, ()=>{});
+    launchConfetti();
+    playMeow();
+  }
+
+  openBtn.addEventListener('click', ()=>{
+    const v = passInput.value.trim();
+    if(!v){ errorMsg.textContent = 'Masukkan kode dulu ya sayang 💜'; setTimeout(()=>errorMsg.textContent='',2200); return }
+    if(v === correctPass){ revealLetter(); }
+    else { errorMsg.textContent = 'Kayaknya salah deh, coba lagi ya 💜'; setTimeout(()=>errorMsg.textContent='',2200); }
+  });
+
+  // also allow Enter
+  passInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') openBtn.click(); });
+
+  // love button gives small particle + gentle bounce
+  loveBtn.addEventListener('click', ()=>{
+    loveBtn.disabled = true;
+    loveBtn.style.transform = 'scale(0.98)';
+    setTimeout(()=> loveBtn.style.transform = '', 160);
+    // tiny hearts effect by creating ephemeral elements
+    for(let i=0;i<8;i++){
+      const h = document.createElement('div');
+      h.textContent = '💜';
+      h.style.position='fixed';
+      h.style.left = (window.innerWidth/2 + (-40 + Math.random()*80))+'px';
+      h.style.top = (window.innerHeight/2 + ( -20 + Math.random()*40))+'px';
+      h.style.fontSize = (12 + Math.random()*18)+'px';
+      h.style.opacity = '1';
+      h.style.transition = 'transform 900ms ease-out, opacity 900ms ease-out';
+      document.body.appendChild(h);
+      requestAnimationFrame(()=>{
+        h.style.transform = 'translateY(-120px) scale(1.2)';
+        h.style.opacity = '0';
+      });
+      setTimeout(()=> document.body.removeChild(h), 1000);
+    }
+    setTimeout(()=> loveBtn.disabled = false, 1000);
+  });
+
+  // resize canvas on window resize
+  window.addEventListener('resize', ()=>{
+    confettiCanvas.width = window.innerWidth * (window.devicePixelRatio||1);
+    confettiCanvas.height = window.innerHeight * (window.devicePixelRatio||1);
+  });
+</script>
+</body>
+</html>
